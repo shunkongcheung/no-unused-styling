@@ -68,11 +68,7 @@ Add `no-unused-styling` to the plugins section of your `.eslintrc` configuration
 }
 ```
 
+
 ## Supported Rules
 
-* Fill in provided rules here
-
-
-## Learning
-
-* a similar eslint rule for material-ui: [link](https://github.com/jens-ox/eslint-plugin-material-ui-unused-classes/blob/main/rule.js)
+* [no-unused-styling](./docs/rules/no-unused-styling.md): prevent unused classNames produced by `@fluentui/mergeStyleSets`
