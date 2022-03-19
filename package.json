@@ -10,14 +10,11 @@
   "author": "Shun",
   "main": "lib/index.js",
   "scripts": {
-    "build": "tsc -b tsconfig.build.json",
     "lint": "eslint .",
     "test": "mocha tests --recursive"
   },
   "dependencies": {
-    "@typescript-eslint/utils": "^5.15.0",
-    "requireindex": "^1.2.0",
-    "typescript": "^4.6.2"
+    "requireindex": "^1.2.0"
   },
   "devDependencies": {
     "eslint": "^8.0.1",
