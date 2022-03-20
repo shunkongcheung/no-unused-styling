@@ -7,6 +7,11 @@ enum MessageId {
   functionFound = "functionFound"
 }
 
+interface MapItem {
+  node: TSESTree.Node;
+  classNames: Array<string>;
+}
+
 const MERGE_STYLE_SET_NAME = "mergeStyleSets";
 
 
@@ -62,6 +67,36 @@ const getStyleNames = (nodeArg: NodeArg) :Array<string> => {
   return names;
 }
 
+const getScopePathname = (ret: Array<string>, node?: TSESTree.Node): Array<string> => {
+  if(!node) {
+    return ret;
+  }
+
+  if(node.type === AST_NODE_TYPES.VariableDeclarator) {
+    let currName = (node.id as TSESTree.Identifier).name;
+    ret.unshift(currName);
+  }
+
+  if(node.type === AST_NODE_TYPES.BlockStatement) {
+    const returnStatement = node.body.find(itm => itm.type === AST_NODE_TYPES.ReturnStatement) as TSESTree.ReturnStatement;
+
+    if(
+      !returnStatement 
+    || returnStatement.argument?.type !== AST_NODE_TYPES.Identifier 
+    || returnStatement.argument?.name !== ret[0]
+    ) {
+      // Component.styles
+      ret = [ret[0]];
+    } else {
+      // getClassNames
+      ret = [];
+    }
+  }
+
+  return getScopePathname(ret, node.parent); 
+}
+
+
 export default createEslintRule({
   name:'no-unused-styling',
   meta: {
@@ -73,19 +108,49 @@ export default createEslintRule({
     fixable: 'code',
     schema: [],
     messages: {
-      [MessageId.functionFound]: "Error: function found {{varNames}}" 
+      [MessageId.functionFound]: "Error: function found {{classNames}}" 
     }
   },
   defaultOptions: [],
   create(context) {
+    const map:Record<string, MapItem> = {};
+
     return {
       CallExpression (node: TSESTree.CallExpression) {
         const callee = node.callee as TSESTree.Identifier;
         if(callee.name === MERGE_STYLE_SET_NAME){
-          const varNames = getStyleNames(node.arguments);
-          context.report({ node, messageId: MessageId.functionFound, data: { varNames } });
+          const classNames = getStyleNames(node.arguments);
+
+          const filename = context.getFilename().replace(/\\/g, "/").split("Src/")[1];
+          const pathname = `${filename}.${getScopePathname([], node)}`;
+
+          map[pathname] = { classNames, node };
+
+          context.report({ node, messageId: MessageId.functionFound, data: { classNames: [pathname].concat(classNames) } });
         }
-      }
+      },
+      ImportDeclaration(node: TSESTree.ImportDeclaration) {
+        const scope = context.getScope();
+        // const srcFilename = node.source.value; // useful to track where it comes from
+        //
+        const variableName = "getClassNames";
+
+        node.specifiers.forEach(specifier => {
+          const importName = specifier.local.name;
+
+          if(importName === variableName){
+            const variable = scope.variables.find(variable => variable.name === variableName)!;
+            const definition = variable.defs[0].node;
+
+            // let varNames = maps.find(itm => itm === definition)
+            const classNames = definition.type;
+
+            context.report({ node, messageId: MessageId.functionFound, data: { classNames } });
+
+          }
+
+        });
+      },
     };
   },
 });
