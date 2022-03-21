@@ -1,8 +1,8 @@
-import {AST_NODE_TYPES, ESLintUtils, TSESTree } from "@typescript-eslint/utils";
+import {ESLintUtils, TSESTree } from "@typescript-eslint/utils";
 import {CallExpression} from "../CallExpression";
 import { PATH_JOINNER } from "../constants";
 import {getBetterFilename} from "../getBetterFilename";
-import {getOriginatePathname} from "../getOriginatePathname";
+import {MemberExpression} from "../MemberExpression";
 
 const createEslintRule = ESLintUtils.RuleCreator(name => name);
 
@@ -72,37 +72,10 @@ export default createEslintRule({
         CallExpression(MERGE_STYLE_SET_NAMES, filename, node, declareMap);
       },
       MemberExpression(node) {
-        if(node.object.type !== AST_NODE_TYPES.Identifier) return;
-        if(node.property.type !== AST_NODE_TYPES.Literal && node.property.type !== AST_NODE_TYPES.Identifier) return;
-
-        const identifierName = node.object.name;
-
         const filename = getBetterFilename(context.getFilename());
         if(!filename) return;
-
-        const [paths, isInSameScope] = getOriginatePathname(MERGE_STYLE_SET_NAMES, filename, identifierName, node);
-        const originatePathname = paths.filter(itm => isInSameScope || !itm.isAssume).map(itm => itm.name).join(PATH_JOINNER);
-
-        if(
-          STYLE_VAR_NAMES.length &&
-          !STYLE_VAR_NAMES.some(itm => identifierName.includes(itm)) &&
-        !STYLE_VAR_NAMES.some(itm => originatePathname.includes(itm))
-        ) 
-        return;
-
-        let className = "";
-        if(node.property.type === AST_NODE_TYPES.Literal)
-          className = node.property.value as string;
-
-        if(node.property.type === AST_NODE_TYPES.Identifier)
-          className = node.property.name;
-
-        const fullpath = `${originatePathname}${PATH_JOINNER}${className}`;
-
-        if(Array.isArray(usageMap[fullpath])) usageMap[fullpath].push(filename);
-        else usageMap[fullpath] = [filename];
-
-        if(debugUsage) context.report({ node, messageId: MessageId.DebugUsage, data: { originatePathname } });
+        const originatePathname = MemberExpression(MERGE_STYLE_SET_NAMES, STYLE_VAR_NAMES, filename, node, usageMap);
+        if(originatePathname && debugUsage) context.report({ node, messageId: MessageId.DebugUsage, data: { originatePathname } });
       },
 
       "Program:exit"() {
