@@ -1,8 +1,10 @@
 import {ESLintUtils, TSESTree } from "@typescript-eslint/utils";
+import {ReportDescriptor} from "@typescript-eslint/utils/dist/ts-eslint";
 import {CallExpression} from "../CallExpression";
-import { PATH_JOINNER } from "../constants";
+import {MessageId} from "../constants";
 import {getBetterFilename} from "../getBetterFilename";
 import {MemberExpression} from "../MemberExpression";
+import {Review} from "../Review";
 
 const createEslintRule = ESLintUtils.RuleCreator(name => name);
 
@@ -13,11 +15,6 @@ const DefaultOptions = {
     variableNames: ["style","Style", "className", "ClassName"],
   }
 
-enum MessageId {
-  DebugDiscover = "DebugDiscover",
-  DebugUsage = "DebugUsage",
-  NotUsed = "NotUsed"
-}
 
 const declareMap:Record<string, Array<TSESTree.Identifier>> = {};
 const usageMap: Record<string, Array<string>> = {};
@@ -80,21 +77,15 @@ export default createEslintRule({
 
       "Program:exit"() {
         const filename = getBetterFilename(context.getFilename());
+        if(!filename) return;
 
-        Object.entries(declareMap).map(([pathname, nodes]) => {
-          nodes.map(node => {
-            if(!pathname.includes(filename)) return;
-
-            const className = node.name;
-            const fullpath = `${pathname}${PATH_JOINNER}${className}`;
-
-            if(!usageMap[fullpath]) context.report({ node, messageId: MessageId.NotUsed, data: { className } })
-            if(debugDiscover) {
-              const usedPaths = [... new Set(usageMap[fullpath])];
-              context.report({ node, messageId: MessageId.DebugDiscover, data: { pathname: fullpath, usedPaths } })
+        const report = (des: ReportDescriptor<MessageId>) => {
+          if(des.messageId === MessageId.DebugDiscover) {
+             if(debugDiscover) context.report(des)
             }
-          });
-        })
+          else context.report(des);
+        }
+        Review(filename, declareMap, usageMap, report);
       }
     }
   }
