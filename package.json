@@ -10,16 +10,21 @@
   "author": "Shun",
   "main": "lib/index.js",
   "scripts": {
+    "start": "npm run build && node lib/cli.js --src \"C:\\Users\\shcheung\\codes\\WPA1UX\\Client\\NovaClient\\Src\"",
     "build": "tsc -b tsconfig.build.json",
     "lint": "eslint .",
     "test": "mocha tests --recursive"
   },
   "dependencies": {
+    "@types/node": "^17.0.22",
+    "@typescript-eslint/parser": "^5.16.0",
     "@typescript-eslint/utils": "^5.15.0",
+    "command-line-args": "^5.2.1",
     "requireindex": "^1.2.0",
     "typescript": "^4.6.2"
   },
   "devDependencies": {
+    "@types/command-line-args": "^5.2.0",
     "eslint": "^8.0.1",
     "eslint-plugin-eslint-plugin": "^4.0.1",
     "eslint-plugin-node": "^11.1.0",
