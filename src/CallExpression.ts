@@ -5,7 +5,7 @@ import {getDeclarePathname} from "./getDeclarePathname";
 
 export const CallExpression = (mergeStyleSetNames: Array<string>, filename: string, node: TSESTree.CallExpression, declareMap: DeclareMap)  => {
     const callee = node.callee as TSESTree.Identifier;
-    if(mergeStyleSetNames.includes(callee.name) ){
+    if(mergeStyleSetNames.includes(callee.name)){
         const classNameIdentifiers = getClassNameIdentifiers(node.arguments);
 
         try{
