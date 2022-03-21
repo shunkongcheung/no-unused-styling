@@ -79,13 +79,12 @@ export default createEslintRule({
         const filename = getBetterFilename(context.getFilename());
         if(!filename) return;
 
-        const report = (des: ReportDescriptor<MessageId>) => {
-          if(des.messageId === MessageId.DebugDiscover) {
-             if(debugDiscover) context.report(des)
+        Review(filename, declareMap, usageMap, (node:TSESTree.Node, messageId: MessageId, data) => {
+          if(messageId === MessageId.DebugDiscover) {
+             if(debugDiscover) context.report({ node, messageId, data })
             }
-          else context.report(des);
-        }
-        Review(filename, declareMap, usageMap, report);
+          else context.report({ node, messageId, data });
+        });
       }
     }
   }
