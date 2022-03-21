@@ -1,8 +1,7 @@
 import {AST_NODE_TYPES, ESLintUtils, TSESTree } from "@typescript-eslint/utils";
+import {CallExpression} from "../CallExpression";
 import { PATH_JOINNER } from "../constants";
 import {getBetterFilename} from "../getBetterFilename";
-import {getClassNameIdentifiers} from "../getClassNameIdentifiers";
-import {getDeclarePathname} from "../getDeclarePathname";
 import {getOriginatePathname} from "../getOriginatePathname";
 
 const createEslintRule = ESLintUtils.RuleCreator(name => name);
@@ -68,21 +67,10 @@ export default createEslintRule({
 
     return {
       CallExpression (node: TSESTree.CallExpression) {
-        const callee = node.callee as TSESTree.Identifier;
-        if(MERGE_STYLE_SET_NAMES.includes(callee.name) ){
-          const classNameIdentifiers = getClassNameIdentifiers(node.arguments);
-
-          const filename = getBetterFilename(context.getFilename());
-          if(!filename) return;
-
-          try{
-            const pathname = `${filename}${PATH_JOINNER}${getDeclarePathname([], node).join(PATH_JOINNER)}`;
-            declareMap[pathname] = classNameIdentifiers;
-
-          }catch {}
-        }
+        const filename = getBetterFilename(context.getFilename());
+        if(!filename) return;
+        CallExpression(MERGE_STYLE_SET_NAMES, filename, node, declareMap);
       },
-
       MemberExpression(node) {
         if(node.object.type !== AST_NODE_TYPES.Identifier) return;
         if(node.property.type !== AST_NODE_TYPES.Literal && node.property.type !== AST_NODE_TYPES.Identifier) return;
