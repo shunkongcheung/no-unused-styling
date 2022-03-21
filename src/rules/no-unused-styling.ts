@@ -1,5 +1,4 @@
 import {ESLintUtils, TSESTree } from "@typescript-eslint/utils";
-import {ReportDescriptor} from "@typescript-eslint/utils/dist/ts-eslint";
 import {CallExpression} from "../CallExpression";
 import {MessageId} from "../constants";
 import {getBetterFilename} from "../getBetterFilename";
