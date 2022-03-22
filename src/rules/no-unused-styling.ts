@@ -88,10 +88,10 @@ export default createEslintRule({
           classNameIdentifiers.map(identifier => {
             const className = identifier.name;
             const fullpath = `${pathname}${PATH_JOINNER}${className}`;
-            if(!usageMap[fullpath]) context.report({ node, messageId: MessageId.NotUsed, data: { className, pathname }});
+            if(!usageMap[fullpath]) context.report({ node: identifier, messageId: MessageId.NotUsed, data: { className, pathname }});
             if(debugDiscover) {
               const usedPaths = [... new Set(usageMap[fullpath])].join(",");
-              context.report({ node, messageId: MessageId.DebugDiscover, data: { pathname: fullpath , usedPaths }});
+              context.report({ node: identifier, messageId: MessageId.DebugDiscover, data: { pathname: fullpath , usedPaths }});
             }
           })
         }catch {}
