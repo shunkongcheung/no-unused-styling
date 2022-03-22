@@ -17,12 +17,13 @@ export const getOriginatePathname = (
   // scenario 2: in function mergeStyleSets
   // scenario 3: variable in same scope
   // scenario 4: function in same scope
+  // scenario 5: pass in as props
 
   if(!node) {
     return [[{isAssume: false, name: pathname }], false];
   }
 
-  if(node.type === AST_NODE_TYPES.VariableDeclarator || node.type === AST_NODE_TYPES.FunctionDeclaration) {
+  if(node.type === AST_NODE_TYPES.VariableDeclarator) {
     const varName = (node.id as TSESTree.Identifier)?.name;
     const [paths, isInSameScope] = getOriginatePathname(MERGE_STYLE_SET_NAMES, pathname, name || varName, node.parent)
 
