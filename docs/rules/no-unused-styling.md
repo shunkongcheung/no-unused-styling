@@ -2,7 +2,15 @@
 
 ## Rule Details
 
-This rule aims to...
+`eslintrc` configuration example:
+```js
+"no-unused-styling/no-unused-styling": [2, {
+  debugDiscover: false, //  on declaration, all used locations are reported
+  debugUsage: false, // on consume, the orignate declartion is reported
+  mergeStyleSetsNames: ["mergeStyleSets"], // function name to detect, by default it is `@fluentui/react`'s `mergeStyleSetsNames`
+  variableNames:  ["style","Style", "className", "ClassName"], // keywords in variable to filter. filtering for performance only. set to empty array to disable filtering
+}]
+```
 
 Examples of **incorrect** code for this rule:
 
@@ -42,14 +50,13 @@ const ComponentOne = () => {
 ```
 
 ## When Not To Use It
-
-Give a short description of when it would be appropriate to turn off this rule.
+Recommend to set at `warn` level only. This rules detect unused style class names. When left unused, they would still cause no errors.
 
 ## Further Reading
 
 watch [this](../../assets/02-discovery.gif) to see how `mergeStyleSets()` and it's classNames are discovered.
 
-There are two main parts as to discover classNames. First, we have to discover any usage of `mergeStyleSets()`. This part is straight forward. With a simple change, we modified existing code where `test()` is found, into `mergeStyleSets()`.
+There are two main parts as to discover classNames. First, we have to discover any usage of `mergeStyleSets()`. 
 
 According to the fluentui's [source code](https://github.com/microsoft/fluentui/blob/master/packages/merge-styles/src/mergeStyles.ts). `mergeStyleSets()` can be called with a few combination of arguments:
 1. with an object: `mergeStyleSets({...})`
@@ -65,8 +72,6 @@ Finally, if argument is an object, it is denoted with .type === "ArrayExpression
 
 For the first two situations (Array, and .type === "ArrayExpression"), the function would recursively call itself, until the third situation is reached. Under which, the function would look for all properties, and the properties' name.
 
-
-
-## Learning
+## Learn more
 
 * a similar eslint rule for material-ui: [link](https://github.com/jens-ox/eslint-plugin-material-ui-unused-classes/blob/main/rule.js)
