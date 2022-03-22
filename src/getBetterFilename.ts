@@ -1,8 +1,11 @@
-export const getBetterFilename = (filename: string) =>  {
-  if(filename.includes("Src")) filename = filename.replace(/\\/g, "/").split("Src/")[1]
-  if(filename.includes("Test")) filename = filename.replace(/\\/g, "/").split("Tests/")[1]
-  
-  if(!filename) return "";
+export const getBetterFilename = (filename: string, rootDir: string) => {
+  filename = filename.replace(rootDir, "").replace(/\\/g, "/")
+  filename = filename.replace(".tsx", "").replace(".ts", "")
+  filename = filename.replace(".js", "").replace(".jsx", "");
 
-  return filename.replace(".tsx", "").replace(".ts", "")
+  // this is hard coded. in realiity, this can be retrieved from tsconfig .includes
+  filename = filename.replace("Src/", "").replace("Tests/", "");
+
+  if(filename.startsWith("/")) filename = filename.replace("/", "");
+  return filename;
 }

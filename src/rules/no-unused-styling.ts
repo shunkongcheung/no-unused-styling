@@ -1,4 +1,4 @@
-import {ESLintUtils, TSESTree } from "@typescript-eslint/utils";
+import {ESLintUtils, TSESTree} from "@typescript-eslint/utils";
 import {MessageId, PATH_JOINNER, UsageMap} from "../constants";
 import {getBetterFilename} from "../getBetterFilename";
 import {getClassNameIdentifiers} from "../getClassNameIdentifiers";
@@ -9,12 +9,24 @@ import {MemberExpression} from "../MemberExpression";
 const createEslintRule = ESLintUtils.RuleCreator(name => name);
 
 const DefaultOptions = {
-    debugDiscover: false,
-    debugUsage: false,
-    mergeStyleSetsNames: ["mergeStyleSets"],
-    variableNames: ["style","Style", "className", "ClassName"],
-  }
+  debugDiscover: false,
+  debugUsage: false,
+  mergeStyleSetsNames: ["mergeStyleSets"],
+  variableNames: ["style","Style", "className", "ClassName"],
+}
 
+
+const sharedStart =(array: Array<string>): string => {
+  let A= array.concat().sort(); 
+  let a1= A[0]; 
+  let a2= A[A.length-1]; 
+  let L= a1.length;
+  let i= 0;
+
+  while( i< L && a1.charAt(i) === a2.charAt(i)) i++;
+
+  return a1.substring(0, i);
+}
 
 let isSet = false;
 let usageMap: UsageMap = {};
@@ -67,14 +79,18 @@ export default createEslintRule({
         if(isSet) return;
         const parserServices = context.parserServices;
         if(!parserServices) return;
-        const fileNames = parserServices.program.getRootFileNames();
-        const maps = getMaps(fileNames.map(j => j), () => {}, MERGE_STYLE_SET_NAMES, STYLE_VAR_NAMES);
-        usageMap = maps.usageMap;
+        const fileNames = parserServices.program.getRootFileNames().map(j => j);
+        const srcDir = sharedStart(fileNames)
 
+        const maps = getMaps(fileNames.map(j => j), srcDir, () => {}, MERGE_STYLE_SET_NAMES, STYLE_VAR_NAMES);
+        usageMap = maps.usageMap;
         isSet = true;
       },
       CallExpression (node: TSESTree.CallExpression) {
-        const filename = getBetterFilename(context.getFilename());
+        const parserServices = context.parserServices;
+        if(!parserServices) return;
+        const srcDir = parserServices.program.getCurrentDirectory();
+        const filename = getBetterFilename(context.getFilename(), srcDir);
         if(!filename) return;
 
         const callee = node.callee as TSESTree.Identifier;
@@ -99,7 +115,10 @@ export default createEslintRule({
       MemberExpression(node) {
         if(!debugUsage) return;
 
-        const filename = getBetterFilename(context.getFilename());
+        const parserServices = context.parserServices;
+        if(!parserServices) return;
+        const srcDir = parserServices.program.getCurrentDirectory();
+        const filename = getBetterFilename(context.getFilename(), srcDir);
         if(!filename) return;
 
         const originatePathname = MemberExpression(MERGE_STYLE_SET_NAMES, STYLE_VAR_NAMES, filename, node, {});

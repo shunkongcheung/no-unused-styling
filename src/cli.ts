@@ -61,7 +61,7 @@ function getFiles (dir: string, files_: Array<string>){
         return true;
     });
 
-    const { declareMap, usageMap } = getMaps(fileNames, log, mergeStyleSetNames, variableNames);
+    const { declareMap, usageMap } = getMaps(fileNames, src, log, mergeStyleSetNames, variableNames);
 
     const result: Record<string, Array<string>> = {};
 

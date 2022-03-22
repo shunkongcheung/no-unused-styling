@@ -8,7 +8,7 @@ import {getBetterFilename} from "./getBetterFilename";
 import {CallExpression} from "./CallExpression";
 import {MemberExpression} from "./MemberExpression";
 
-export const getMaps = (fileNames: Array<string>, log: Log, mergeStyleSetNames:Array<string>, variableNames: Array<string>) => {
+export const getMaps = (fileNames: Array<string>, rootDir: string, log: Log, mergeStyleSetNames:Array<string>, variableNames: Array<string>) => {
     const declareMap:DeclareMap = {};
     const usageMap: UsageMap = {};
 
@@ -21,7 +21,7 @@ export const getMaps = (fileNames: Array<string>, log: Log, mergeStyleSetNames:A
             log(`unreadable: ${_filename}`, LogLevel.warning);
             continue;
         }
-        const filename = getBetterFilename(_filename);
+        const filename = getBetterFilename(_filename, rootDir);
         if(!filename) {
             log(`unreadable: ${_filename}`, LogLevel.warning);
             continue;
