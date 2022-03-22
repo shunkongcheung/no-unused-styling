@@ -2,6 +2,17 @@ import { TSESTree } from "@typescript-eslint/typescript-estree";
 
 export type DeclareMap = Record<string, Array<TSESTree.Identifier>>;
 
+
+export enum LogLevel {
+    none = 0,
+    error,
+    warning,
+    info,
+    debug,
+}
+
+export type Log = (msg: string, logLvl: LogLevel) => any;
+
 export enum MessageId {
   DebugDiscover = "DebugDiscover",
   DebugUsage = "DebugUsage",

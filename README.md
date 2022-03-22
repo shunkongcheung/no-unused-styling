@@ -49,7 +49,9 @@ Next, install `eslint-plugin-no-unused-styling` by file system linkage:
 }
 ```
 
-Watch [installation](./assets/01-installation.gif)
+Watch [installation](./assets/01-installation.gif), and watch [usage](./assets/03-usage-eslint.gif).
+
+If you are interested in running the rule as cli, watch [this](./assets/03-usage-cli.gif).
 
 
 ## Typescript

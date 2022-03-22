@@ -1,9 +1,10 @@
 import {ESLintUtils, TSESTree } from "@typescript-eslint/utils";
-import {CallExpression} from "../CallExpression";
-import {MessageId} from "../constants";
+import {MessageId, PATH_JOINNER, UsageMap} from "../constants";
 import {getBetterFilename} from "../getBetterFilename";
+import {getClassNameIdentifiers} from "../getClassNameIdentifiers";
+import {getDeclarePathname} from "../getDeclarePathname";
+import {getMaps} from "../getMaps";
 import {MemberExpression} from "../MemberExpression";
-import {Review} from "../Review";
 
 const createEslintRule = ESLintUtils.RuleCreator(name => name);
 
@@ -15,8 +16,8 @@ const DefaultOptions = {
   }
 
 
-const declareMap:Record<string, Array<TSESTree.Identifier>> = {};
-const usageMap: Record<string, Array<string>> = {};
+let isSet = false;
+let usageMap: UsageMap = {};
 
 export default createEslintRule({
   name:'no-unused-styling',
@@ -62,28 +63,47 @@ export default createEslintRule({
     const STYLE_VAR_NAMES  = firstOptions?.variableNames ?? DefaultOptions.variableNames; // performance only
 
     return {
+      Program() {
+        if(isSet) return;
+        const parserServices = context.parserServices;
+        if(!parserServices) return;
+        const fileNames = parserServices.program.getRootFileNames();
+        const maps = getMaps(fileNames.map(j => j), () => {}, MERGE_STYLE_SET_NAMES, STYLE_VAR_NAMES);
+        usageMap = maps.usageMap;
+
+        isSet = true;
+      },
       CallExpression (node: TSESTree.CallExpression) {
         const filename = getBetterFilename(context.getFilename());
         if(!filename) return;
-        CallExpression(MERGE_STYLE_SET_NAMES, filename, node, declareMap);
+
+        const callee = node.callee as TSESTree.Identifier;
+        if(!MERGE_STYLE_SET_NAMES.includes(callee.name)) return;
+        const classNameIdentifiers = getClassNameIdentifiers(node.arguments);
+
+        try{
+          const declaredPathname = getDeclarePathname([], node).join(PATH_JOINNER);
+          const pathname = `${filename}${PATH_JOINNER}${declaredPathname}`;
+
+          classNameIdentifiers.map(identifier => {
+            const className = identifier.name;
+            const fullpath = `${pathname}${PATH_JOINNER}${className}`;
+            if(!usageMap[fullpath]) context.report({ node, messageId: MessageId.NotUsed, data: { className, pathname }});
+            if(debugDiscover) {
+              const usedPaths = [... new Set(usageMap[fullpath])].join(",");
+              context.report({ node, messageId: MessageId.DebugDiscover, data: { pathname: fullpath , usedPaths }});
+            }
+          })
+        }catch {}
       },
       MemberExpression(node) {
-        const filename = getBetterFilename(context.getFilename());
-        if(!filename) return;
-        const originatePathname = MemberExpression(MERGE_STYLE_SET_NAMES, STYLE_VAR_NAMES, filename, node, usageMap);
-        if(originatePathname && debugUsage) context.report({ node, messageId: MessageId.DebugUsage, data: { originatePathname } });
-      },
+        if(!debugUsage) return;
 
-      "Program:exit"() {
         const filename = getBetterFilename(context.getFilename());
         if(!filename) return;
 
-        Review(filename, declareMap, usageMap, (node:TSESTree.Node, messageId: MessageId, data) => {
-          if(messageId === MessageId.DebugDiscover) {
-             if(debugDiscover) context.report({ node, messageId, data })
-            }
-          else context.report({ node, messageId, data });
-        });
+        const originatePathname = MemberExpression(MERGE_STYLE_SET_NAMES, STYLE_VAR_NAMES, filename, node, {});
+        if(originatePathname) context.report({ node, messageId: MessageId.DebugUsage, data: { originatePathname } });
       }
     }
   }
