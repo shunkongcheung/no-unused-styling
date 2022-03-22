@@ -5,7 +5,6 @@ interface PathItem {
   name: string;
 }
 
-
 export const getOriginatePathname = (
   MERGE_STYLE_SET_NAMES: Array<string>, 
   pathname: string, 
@@ -17,18 +16,21 @@ export const getOriginatePathname = (
   // scenario 2: in function mergeStyleSets
   // scenario 3: variable in same scope
   // scenario 4: function in same scope
-  // scenario 5: pass in as props
 
   if(!node) {
     return [[{isAssume: false, name: pathname }], false];
   }
 
-  if(node.type === AST_NODE_TYPES.VariableDeclarator) {
-    const varName = (node.id as TSESTree.Identifier)?.name;
-    const [paths, isInSameScope] = getOriginatePathname(MERGE_STYLE_SET_NAMES, pathname, name || varName, node.parent)
+  if(node.type === AST_NODE_TYPES.ArrowFunctionExpression) {
+    const parent = node.parent;
 
-    const result = paths[paths.length - 1].name === varName ? paths : [...paths].concat([{ name: varName, isAssume: true }]);
-    return [result, isInSameScope];
+    if(parent && parent.type === AST_NODE_TYPES.VariableDeclarator) {
+      const varName = (parent.id as TSESTree.Identifier)?.name;
+      const [paths, isInSameScope] = getOriginatePathname(MERGE_STYLE_SET_NAMES, pathname, name || varName, parent.parent)
+
+      const result = paths[paths.length - 1].name === varName ? paths : [...paths].concat([{ name: varName, isAssume: true }]);
+      return [result, isInSameScope];
+    }
   }
 
   if(
@@ -51,7 +53,7 @@ export const getOriginatePathname = (
 
         const result = [...prevOrigin].concat([{ name: isMergeStyleSet? name : calleeName, isAssume: false }]);
         if(!isMergeStyleSet) isInSameScope = false;
-          
+
         return [result, isInSameScope || (node.type === AST_NODE_TYPES.BlockStatement && isMergeStyleSet)];
       }
     }
