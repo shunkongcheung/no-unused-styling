@@ -23,7 +23,7 @@ export const getMaps = (fileNames: Array<string>, rootDir: string, log: Log, mer
         }
         const filename = getBetterFilename(_filename, rootDir);
         if(!filename) {
-            log(`unreadable: ${_filename}`, LogLevel.warning);
+            log(`unrecognized: ${_filename}`, LogLevel.warning);
             continue;
         }
 
